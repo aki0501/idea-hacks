@@ -1,0 +1,32 @@
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include "MyWebPage.h"  // Include your custom HTML header
+
+const char* ssid = "ESP32-Network";
+const char* password = "your-password";
+
+AsyncWebServer server(80);
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.softAP(ssid, password);
+
+  while (WiFi.softAPIP() == IPAddress(0, 0, 0, 0)) {
+    delay(1000);
+    Serial.println("Setting up WiFi...");
+  }
+
+  Serial.print("Access Point IP Address: ");
+  Serial.println(WiFi.softAPIP());
+
+  // Serve HTML content from the header file
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/html", myWebPage);
+  });
+
+  server.begin();
+}
+
+void loop() {
+  // Your code here
+}
