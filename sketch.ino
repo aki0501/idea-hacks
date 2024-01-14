@@ -29,13 +29,13 @@ void saveStringToFile(const String& data, const char* filename) {
 
     // Check if the file was opened successfully for reading
     if (file) {
-      Serial.println("Reading file:");
+      // Serial.println("Reading file:");
 
       // Read and print the contents of the file
-      while (file.available()) {
-        Serial.write(file.read());
-      }
-      Serial.println(); // Print a newline after reading
+      // while (file.available()) {
+      //   Serial.write(file.read());
+      // }
+      // Serial.println(); // Print a newline after reading
 
       // Close the file after reading
       file.close();
@@ -250,20 +250,12 @@ void loop() {
 }
 
 void compareData() {
-    // Current user's preferences
   // Current user's preferences
   File prefsFile = SPIFFS.open("/userData.txt", "r");
   if (!prefsFile) {
       Serial.println("Unable to open file: userData.txt");
       return;
   }
-  
-  // Print contents of the prefsFile
-  Serial.println("Contents of userData.txt:");
-  while (prefsFile.available()) {
-      Serial.write(prefsFile.read());
-  }
-  Serial.println(); // Print a newline after reading
   
   // Person's profile for comparison
   File personFile = SPIFFS.open("/user2Data.txt", "r");
@@ -273,22 +265,14 @@ void compareData() {
       return;
   }
   
-  // Print contents of the personFile
-  Serial.println("Contents of user2Data.txt:");
-  while (personFile.available()) {
-      Serial.write(personFile.read());
-  }
-  Serial.println(); // Print a newline after reading
-
   // Keep score of similarities/matches between files
   int score = 0;
   char buffer[1024];
 
   // Check age
-  String ageRange = prefsFile.readStringUntil(',');
-  int realAge = personFile.readStringUntil(',').toInt();
-  prefsFile.readStringUntil(','); // Read until the end of line to position at the next field
-  if (realAge >= atoi(ageRange.c_str())) {
+  String prefAge = prefsFile.readStringUntil(',');
+  String realAge = personFile.readStringUntil(','); 
+  if (prefAge.equals(realAge)) {
     score++;
     Serial.println("Age matches, incrementing score");
   }
@@ -296,30 +280,29 @@ void compareData() {
   // Check gender
   String prefGender = prefsFile.readStringUntil(',');
   String realGender = personFile.readStringUntil(',');
-  prefsFile.readStringUntil(','); // Read until the end of line to position at the next field
   if (prefGender.equals(realGender)) {
     score++;
     Serial.println("Gender matches, incrementing score");
   }
 
   // Increment score for each matching hobby
+  String prefHobbies[5];
   for (int i = 0; i < 5; i++) {
-    String prefHobby = prefsFile.readStringUntil(',');
-    Serial.println("printing pref hobby");
-    Serial.println(prefHobby);
-//    prefsFile.readStringUntil(','); // Read until the end of line to position at the next field
+      prefHobbies[i] = prefsFile.readStringUntil(','); 
+  }
 
-    for (int j = 0; j < 5; j++) {
-      String personHobby = personFile.readStringUntil(',');
-      Serial.println("printing person hobby");
-      Serial.println(personHobby);
+  String personHobbies[5];
+  for (int i = 0; i < 5; i++) {
+      personHobbies[i] = personFile.readStringUntil(',');
+  }
 
-      if (prefHobby.equals(personHobby)) {
-        // Code here to tell the user which hobbies match/save matching hobbies somewhere
-        score++;
-        Serial.println("Hobby matches, incrementing score");
+  for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; j++) {
+          if (prefHobbies[i].equals(personHobbies[j])) {
+            score++;
+            Serial.println("Hobby matches, incrementing score");
+          }
       }
-    }
   }
 
   // If at least one hobby matches, vibrate
