@@ -1,3 +1,8 @@
+// MyWebPage.h
+#ifndef MY_WEB_PAGE_H
+#define MY_WEB_PAGE_H
+
+const char* myWebPage = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
@@ -339,3 +344,6 @@
   </form>
 </body>
 </html>
+)rawliteral";
+
+#endif // MY_WEB_PAGE_H
