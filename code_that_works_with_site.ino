@@ -7,21 +7,46 @@ const char* password = "your-password";
 
 AsyncWebServer server(80);
 
-//FUNCTION TO SAVE STRING TO TEXT FILE
 void saveStringToFile(const String& data, const char* filename) {
+  // Open the file for writing
   File file = SPIFFS.open(filename, "w");
+
+  // Check if the file was opened successfully
   if (!file) {
     Serial.println("Error opening file for writing");
     return;
   }
-  if (file) {
-    file.print(data);
-    file.close();
+
+  // Write data to the file
+  if (file.print(data)) {
     Serial.println("File saved successfully.");
+
+    // Close the file after writing
+    file.close();
+
+    // Now, open the file for reading
+    file = SPIFFS.open(filename, "r");
+
+    // Check if the file was opened successfully for reading
+    if (file) {
+      Serial.println("Reading file:");
+
+      // Read and print the contents of the file
+      while (file.available()) {
+        Serial.write(file.read());
+      }
+      Serial.println(); // Print a newline after reading
+
+      // Close the file after reading
+      file.close();
+    } else {
+      Serial.println("Error opening file for reading");
+    }
   } else {
     Serial.println("Error saving file.");
   }
 }
+
 
 // The HTML content of your survey form
 const char* htmlContent = R"rawliteral(
@@ -118,7 +143,7 @@ const char* htmlContent = R"rawliteral(
       var ageElements = document.getElementsByName('age');
       for (var i = 0; i < ageElements.length; i++) {
         if (ageElements[i].checked) {
-          response += ageElements[i].value + '\n ';
+          response += ageElements[i].value + ',';
           break;
         }
       }
@@ -127,7 +152,7 @@ const char* htmlContent = R"rawliteral(
       var genderElements = document.getElementsByName('gender');
       for (var i = 0; i < genderElements.length; i++) {
         if (genderElements[i].checked) {
-          response += genderElements[i].value + '\n ';
+          response += genderElements[i].value + ',';
           break;
         }
       }
@@ -140,8 +165,9 @@ const char* htmlContent = R"rawliteral(
             }
           }
           if (hobbiesResponse.length > 0) {
-            response += hobbiesResponse.join('\n') + '\n ';
+            response += hobbiesResponse.join(',');
           }
+        response += ',';
 
           // Display the response string in the 'responseDisplay' div
       document.getElementById('responseDisplay').innerText = response;
@@ -160,6 +186,7 @@ const char* htmlContent = R"rawliteral(
         console.log(data); // Log the response from the server
         // Optionally, update the UI to show that the data has been submitted
       });
+
     });
   </script>
 </body>
@@ -168,12 +195,13 @@ const char* htmlContent = R"rawliteral(
 )rawliteral";
 
 void setup() {
-  SPIFFS.format();  // Uncomment this line to format SPIFFS
+  //SPIFFS.format();  // Uncomment this line to format SPIFFS
   Serial.begin(115200);
-  if(!SPIFFS.begin(true)){
+   // Mount SPIFFS without formatting
+  if (!SPIFFS.begin(false)) {
     Serial.println("An error occurred while mounting SPIFFS");
     return;
-}
+  }
 
   // Set up ESP32 as an access point
   WiFi.softAP(ssid, password);
@@ -189,7 +217,7 @@ void setup() {
   Serial.print("Access Point IP Address: ");
   Serial.println(ipAddress);
 
-// Define the survey form web page
+  // Define the survey form web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/html", htmlContent);
   });
@@ -201,8 +229,10 @@ void setup() {
       AsyncWebParameter* p = request->getParam("response", true);
 
       // Save the response data to a file
-      saveStringToFile(p->value(), "/userData.txt");
-      
+      saveStringToFile(p->value(), "/user2Data.txt");
+
+      // Compare with preferences and person files
+      compareData();
 
       // Send a response to the client
       request->send(200, "text/plain", "Data saved successfully!");
@@ -217,4 +247,90 @@ void setup() {
 
 void loop() {
   // Your code here
+}
+
+void compareData() {
+    // Current user's preferences
+  // Current user's preferences
+  File prefsFile = SPIFFS.open("/userData.txt", "r");
+  if (!prefsFile) {
+      Serial.println("Unable to open file: userData.txt");
+      return;
+  }
+  
+  // Print contents of the prefsFile
+  Serial.println("Contents of userData.txt:");
+  while (prefsFile.available()) {
+      Serial.write(prefsFile.read());
+  }
+  Serial.println(); // Print a newline after reading
+  
+  // Person's profile for comparison
+  File personFile = SPIFFS.open("/user2Data.txt", "r");
+  if (!personFile) {
+      Serial.println("Unable to open file: user2Data.txt");
+      prefsFile.close();
+      return;
+  }
+  
+  // Print contents of the personFile
+  Serial.println("Contents of user2Data.txt:");
+  while (personFile.available()) {
+      Serial.write(personFile.read());
+  }
+  Serial.println(); // Print a newline after reading
+
+  // Keep score of similarities/matches between files
+  int score = 0;
+  char buffer[1024];
+
+  // Check age
+  String ageRange = prefsFile.readStringUntil(',');
+  int realAge = personFile.readStringUntil(',').toInt();
+  prefsFile.readStringUntil(','); // Read until the end of line to position at the next field
+  if (realAge >= atoi(ageRange.c_str())) {
+    score++;
+    Serial.println("Age matches, incrementing score");
+  }
+
+  // Check gender
+  String prefGender = prefsFile.readStringUntil(',');
+  String realGender = personFile.readStringUntil(',');
+  prefsFile.readStringUntil(','); // Read until the end of line to position at the next field
+  if (prefGender.equals(realGender)) {
+    score++;
+    Serial.println("Gender matches, incrementing score");
+  }
+
+  // Increment score for each matching hobby
+  for (int i = 0; i < 5; i++) {
+    String prefHobby = prefsFile.readStringUntil(',');
+    Serial.println("printing pref hobby");
+    Serial.println(prefHobby);
+//    prefsFile.readStringUntil(','); // Read until the end of line to position at the next field
+
+    for (int j = 0; j < 5; j++) {
+      String personHobby = personFile.readStringUntil(',');
+      Serial.println("printing person hobby");
+      Serial.println(personHobby);
+
+      if (prefHobby.equals(personHobby)) {
+        // Code here to tell the user which hobbies match/save matching hobbies somewhere
+        score++;
+        Serial.println("Hobby matches, incrementing score");
+      }
+    }
+  }
+
+  // If at least one hobby matches, vibrate
+  if (score >= 3) {
+    Serial.println("~~~vibration~~~~ found a friend");
+    Serial.println(score);
+  } else {
+    Serial.println("incompatible :((");
+    Serial.println(score);
+  }
+
+  prefsFile.close();
+  personFile.close();
 }
