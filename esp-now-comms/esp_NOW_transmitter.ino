@@ -7,11 +7,32 @@
 //-------------------------------------------------------------------------------------
 uint8_t RxMACaddress[] = {0x08, 0xD1, 0xF9, 0x28, 0x90, 0x54};
 //-------------------------------------------------------------------------------------
-typedef struct TxStruct
-{
-  int potVal;
-}TxStruct;
-TxStruct sentData;
+
+void sendFileContents(const char* fileName, uint8_t channel, uint8_t receiverMACAddress){
+  File file = SPIFFS.open(fileName, "r");
+  if (!file) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+  uint8_t buffer[128];  // Adjust the buffer size 
+  int bytesRead = 0;
+  do {
+    bytesRead = file.readBytes((char*)buffer, sizeof(buffer));
+    esp_err_t result = esp_now_send(receiverMACAddress, buffer, bytesRead);
+    
+    if (result != ESP_OK) {
+      Serial.println("Error sending file chunk");
+      break;
+    }
+    else{
+      Serial.println("SENT SUCCESS!");
+    }
+    delay(20);  // Adjust the delay based on your requirements
+
+  } while (bytesRead > 0);
+  file.close();
+}
+
 //-------------------------------------------------------------------------------------
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) //callback function
 {
@@ -57,14 +78,12 @@ void setup()
 //======================================================================================
 void loop()
 {
-  sentData.potVal = 2;
+
+  sentData.buffer = "hi";
+  char* fileName = "/userData.txt"
   //-------------------------------------------------------------------------------------
-  esp_err_t result = esp_now_send(RxMACaddress, (uint8_t *) &sentData, sizeof(sentData));
-  Serial.println(result);
-  Serial.println(ESP_OK);
-  //-------------------------------------------------------------------------------------
-  if (result == ESP_OK) Serial.println("Sent with success");
-  else Serial.println("Error sending the data");
+  sendFileContents(fileName, peerInfo.channel, RxMACaddress)
+
   //-------------------------------------------------------------------------------------
   delay(500);
 }
