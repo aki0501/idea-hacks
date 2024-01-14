@@ -1,3 +1,4 @@
+const char* profileContent = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
@@ -132,7 +133,7 @@
     }
 
     .submit-button {
-      background: linear-gradient(to right bottom, hsl(230, 97%, 62%), hsl(69, 97%, 62%)); 
+      background: linear-gradient(to right bottom, hsl(230, 97%, 62%), hsl(69, 97%, 62%));
         border: none;
         padding: 10px 20px;
         border-radius: 5px;
@@ -147,7 +148,7 @@
 </head>
 <body>
   <div class="fixed-header">
-     Fill in <br> your <br> preferences!
+     Fill in <br> your <br> profile!
   </div>
   <!-- Survey Form -->
   <form id="surveyForm">
@@ -233,7 +234,7 @@
         </label>
     </div>
 
-    
+
     <!-- Interests/Hobbies Question -->
     <p class="question-heading">Interests/Hobbies (choose 5):</p>
     <input type="checkbox" id="hobby1" name="hobby" value="Sports">
@@ -301,18 +302,18 @@
 
   <!-- Placeholder for displaying responses -->
   <div id="responseDisplay" class="rad-text" style="margin-top: 20px;"></div>
-  
+
   <script>
     document.getElementById('surveyForm').addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent the default form submission
 
-      var response = '';
+      var profile = '';
 
       // Handling Age Range
       var ageElements = document.getElementsByName('age');
       for (var i = 0; i < ageElements.length; i++) {
         if (ageElements[i].checked) {
-          pref += ageElements[i].value + '\n ';
+            profile += ageElements[i].value + '\n ';
           break;
         }
       }
@@ -321,7 +322,7 @@
       var genderElements = document.getElementsByName('gender');
       for (var i = 0; i < genderElements.length; i++) {
         if (genderElements[i].checked) {
-          pref += genderElements[i].value + '\n ';
+            profile += genderElements[i].value + '\n ';
           break;
         }
       }
@@ -334,14 +335,14 @@
             }
           }
           if (hobbiesResponse.length > 0) {
-            pref += hobbiesResponse.join('\n') + '\n ';
+              profile += hobbiesResponse.join('\n') + '\n ';
           }
 
-      
+
           document.getElementById('responseDisplay').innerText = "Submitted successfully!";
-          window.location.href = 'profile.html'; //adjust 
         });
       </script>
   </form>
 </body>
 </html>
+)rawliteral";
