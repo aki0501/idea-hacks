@@ -5,14 +5,35 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <Wire.h>
+
+#include <SPIFFS.h>
 // #include <Adafruit_GFX.h>
 // #include <Adafruit_SSD1306.h>
 //-------------------------------------------------------------------------------------
 // Adafruit_SSD1306 display(128, 64, &Wire, -1);
 //-------------------------------------------------------------------------------------
+//FUNCTION TO SAVE STRING TO TEXT FILE
+
+String filename = "/matchUserData.txt";
+
+void saveStringToFile(const String& data, const char* filename) {
+  File file = SPIFFS.open(filename, "w");
+  if (!file) {
+    Serial.println("Error opening file for writing");
+    return;
+  }
+  if (file) {
+    file.print(data);
+    file.close();
+    Serial.println("File saved successfully.");
+  } else {
+    Serial.println("Error saving file.");
+  }
+}
+
 typedef struct RxStruct
 {
-  int potVal = -1;
+  char contents[1024];
 }RxStruct;
 RxStruct receivedData;
 //-------------------------------------------------------------------------------------
@@ -51,7 +72,8 @@ void setup()
 //======================================================================================
 void loop()
 {
-  Serial.println(receivedData.potVal);
+  Serial.println(receivedData.contents);
+  saveStringToFile(receivedData.contents, filename);
   // display.setTextColor(WHITE); display.clearDisplay();
   // display.setTextSize(2); display.setCursor(20,0); display.print("ESP-NOW");
   // display.setCursor(10,18); display.print("POT Value");
