@@ -205,6 +205,28 @@
             <div class="rad-text">Prefer not to say</div>
         </label>
     </div>
+
+    <div>
+        <p class="question-heading">Relationship type:</p>
+        <label class="rad-label">
+            <input type="radio" class="rad-input" id="option1" name="preference" value="Romantic">
+            <div class="rad-design"></div>
+            <div class="rad-text">Romantic</div>
+        </label>
+
+        <label class="rad-label">
+            <input type="radio" class="rad-input" id="option2" name="preference" value="Platonic">
+            <div class="rad-design"></div>
+            <div class="rad-text">Platonic</div>
+        </label>
+
+        <label class="rad-label">
+            <input type="radio" class="rad-input" id="option3" name="preference" value="Open to All">
+            <div class="rad-design"></div>
+            <div class="rad-text">Open to All</div>
+        </label>
+    </div>
+
     
     <!-- Interests/Hobbies Question -->
     <p class="question-heading">Interests/Hobbies (choose 5):</p>
@@ -273,8 +295,8 @@
   
 
   <!-- Placeholder for displaying responses -->
-  <div id="responseDisplay"></div>
-
+  <div id="responseDisplay" class="rad-text" style="margin-top: 20px;"></div>
+  
   <script>
     document.getElementById('surveyForm').addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent the default form submission
@@ -310,8 +332,8 @@
             response += hobbiesResponse.join('\n') + '\n ';
           }
 
-          // Display the response string in the 'responseDisplay' div
-          document.getElementById('responseDisplay').innerText = response;
+      
+          document.getElementById('responseDisplay').innerText = "Submitted successfully!";
         });
       </script>
   </form>
